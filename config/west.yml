@@ -20,9 +20,42 @@ manifest:
   projects:
     - name: zmk
       remote: zmkfirmware
-      revision: main
+      # 〈Known-Good Anchor〉— 2026-06-13 の Build (run 27458367283) が引いた上流に固定。
+      # `main` のままだとビルドの度に上流が動き、同じコミットでも別物が焼き上がる。
+      # 42キー版〈Cardinal〉で無線不通の真因となったため双子同期する。
+      revision: ff09f2d0c9f13a868c8f71d71d9348ade438e4b6
       path: zmk
       import: app/west.yml
+
+    # 〈Zephyr Anchor〉— zmk の app/west.yml は zephyr を `v4.1.0+zmk-fixes`
+    # という **ブランチ** で指しているため、zmk を SHA 固定しても zephyr だけは
+    # ビルドの度に先端へ流れる（06-13=58a5874a に対し 07-06 は 9df4b12b）。
+    # west は「取り込む側（本 manifest）の定義が取り込まれる側に優先する」ため、
+    # ここで同名 project を再定義して固定する。
+    # import ブロックは zmk 側 (ff09f2d) の内容をそのまま複製すること
+    # ―― name-blocklist が食い違うとモジュール構成が変わる。
+    - name: zephyr
+      remote: zmkfirmware
+      revision: 58a5874a446ace2893a196848282d271a551e512
+      import:
+        name-blocklist:
+          - ci-tools
+          - hal_altera
+          - hal_cypress
+          - hal_infineon
+          - hal_microchip
+          - hal_nxp
+          - hal_openisa
+          - hal_xtensa
+          - hal_st
+          - hal_ti
+          - loramac-node
+          - mcuboot
+          - mcumgr
+          - net-tools
+          - openthread
+          - edtt
+          - trusted-firmware-m
 
     - name: zmk-pmw3610-driver
       remote: cardinal-sys
@@ -31,7 +64,8 @@ manifest:
 
     - name: zmk-listeners
       remote: ssbb
-      revision: v1
+      # `v1` はタグではなくブランチ。2026-06-13 時点の実コミットへ固定。
+      revision: c240cea
       path: modules/zmk-listeners
 
     - name: zmk-mouse-gesture
@@ -41,7 +75,9 @@ manifest:
 
     - name: zmk-scroll-snap
       remote: kot149
-      revision: v1
+      # `v1` はブランチのため 06-13(1f8fc86) → 07-06(dd21a0f) で黙って動いていた。
+      # 差分は docs のみだが再現性のため 06-13 時点へ固定。
+      revision: 1f8fc86
       path: modules/zmk-scroll-snap
 
     - name: zmk-rgbled-widget
